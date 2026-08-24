@@ -22,8 +22,8 @@ def embed_text(text):
 def embed_image(image):
     inputs = image_processor(images=image, return_tensors="pt")
     with torch.no_grad():
-        features = image_model.get_image_features(**inputs)
-    return features[0].tolist()
+        outputs = image_model.get_image_features(**inputs)
+    return outputs.pooler_output[0].tolist()
 
 
 def ingest_and_store(file, db):
@@ -59,7 +59,6 @@ def ingest_and_store(file, db):
             (doc_id, image_entry["page"], matching_chunk_row_id)
         )
         image_row_id = cur.lastrowid
-
         db.execute(
             "INSERT INTO image_vectors (rowid, embedding) VALUES (?, ?)",
             (image_row_id, sqlite_vec.serialize_float32(image_embedding))
@@ -69,4 +68,5 @@ def ingest_and_store(file, db):
 
 if __name__ == "__main__":
     test_file = "test_data/mueller_report.pdf"
+    
     ingest_and_store(test_file, init_db())
